@@ -436,4 +436,6 @@ SELECT
     -- create state > state lane column:
     CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_STE_COD") AS "state > state lane",
     -- create "Origin > City, ST Lane" column:
-    CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_CTY_DSC", ' , ', "SHP_LEG_DRP_STE_COD") AS "Origin > City, ST Lane"
+    CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_CTY_DSC", ' , ', "SHP_LEG_DRP_STE_COD") AS "Origin > City, ST Lane",
+    -- create "Lane" column:
+    CONCAT("SHP_LEG_PIC_CTY_DSC", ', ' ,"SHP_LEG_PIC_STE_COD", ' - ', "SHP_LEG_DRP_CTY_DSC", ', ', "SHP_LEG_DRP_STE_COD") AS "Lane"
