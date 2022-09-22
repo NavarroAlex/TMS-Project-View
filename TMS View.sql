@@ -408,4 +408,32 @@ SELECT
     TMS_LOA_LNE.SHP_LEG_RTE_UOM_COD AS SHP_LEG_RTE_UOM_COD,
     TMS_LOA_LNE.SHP_LEG_DRP_DOC_UOM_COD AS HP_LEG_DRP_DOC_UOM_COD,
     -- create bracket column:
-    CASE WHEN 
+    CASE
+        -- first condition:
+        WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS < 3000 THEN "3000",
+        -- second condition:
+        WHEN TMS_LOA_LNE.GRS_WGH_CAR >= 3000 AND TMS_LOA_LNE.GRS_WGH_CAR <= 7000 THEN "3000-7000",
+        -- third condition:
+        WHEN TMS_LOA_LNE.GRS_WGH_CAR >= 7000 AND TMS_LOA_LNE.GRS_WGH_CAR <= 20000 THEN "7000-20000",
+        -- fourth condition:
+        WHEN TMS_LOA_LNE.GRS_WGH_CAR >= 20000 AND TMS_LOA_LNE.GRS_WGH_CAR <= 30000 THEN "20000-30000",
+        -- fifth condition:
+        WHEN TMS_LOA_LNE.GRS_WGH_CAR >= 30000 AND TMS_LOA_LNE.GRS_WGH_CAR <= 39000 THEN "30000-39000",
+        -- sixth condition:
+        WHEN TMS_LOA_LNE.GRS_WGH_CAR > 39000 THEN ">39000"
+        -- end:
+        END AS "GRS_WGH__CAR_Bracket",
+    -- create shuttle_origin:
+    CASE
+        -- create first condition:
+        WHEN TMS_LOA_LNE.shuttle_column = "SHUTTLE" THEN "Shuttle" ELSE "Non-Shuttle" END AS "LOA_GRP_DSC_Shuttle_Yes_No",
+    -- create Shuttle Cost column:
+    --CASE
+        -- create condition:
+        --WHEN TMS_LOA_LNE.LOA_GRP_DSC_Shuttle_Yes_No = "Shuttle" THEN [Origin DESC] ELSE 0 END AS LOA_GRP_DSC_Shuttle_Yes_No_Shuttle_Cost
+    -- create id_lane column:
+    CONCAT("SHP_LEG_PIC_CBU_COD","SHP_LEG_DRP_CBU_COD") AS ID_Lane,
+    -- create state > state lane column:
+    CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_STE_COD") AS "state > state lane",
+    -- create "Origin > City, ST Lane" column:
+    CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_CTY_DSC", ' , ', "SHP_LEG_DRP_STE_COD") AS "Origin > City, ST Lane"
