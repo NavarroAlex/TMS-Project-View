@@ -448,6 +448,432 @@ SELECT
                 THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_LBS_CSL_VAL
                 ELSE 0
             END)) AS SHP_NET_LBS_DEL,
+    -- sum case when:
+    SUM((
+            CASE
+                WHEN TMS_LOA_LNE.LOA_CUS_PIC_FLG = 'CUST PICKUP'
+                THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_LBS_CSL_VAL
+                ELSE 0
+            END)) AS SHP_NET_LBS_PIK,
+    SUM(TMS_LOA_LNE.LOA_PIC_DRP_LCT_NBR) NUM_OF_STP,
+    MAX(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'ORD'
+                    THEN TMS_LOA_LNE.SHP_ORD_DOC_NUM
+                    WHEN TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'DEL'
+                    THEN TMS_LOA_LNE.SHP_DEL_DOC_NUM
+                    WHEN TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'SHP'
+                    THEN TMS_LOA_LNE.LOA_CBU_REF_NUM
+                    ELSE NULL
+                END
+        END) OTD_APP_FOR_CAR_SHP_2HR_DEN_DRP,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_TIM <=
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101
+                            THEN TMS_LOA_LNE.SHP_LEG_DRP_APP_TIM
+                            ELSE TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_TIM
+                        END
+                    THEN 1
+                    ELSE 0
+                END
+        END) OTD_APP_FOR_CAR_SHP_0HR,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_TIM <= (
+                            CASE
+                                WHEN TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101
+                                THEN TMS_LOA_LNE.SHP_LEG_DRP_APP_TIM
+                                ELSE DATEADD(Hours, 2,TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_TIM)
+                            END)
+                    THEN 1
+                    ELSE 0
+                END
+        END) OTD_APP_FOR_CAR_SHP_2HR,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_TIM <= (
+                            CASE
+                                WHEN TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101
+                                THEN TMS_LOA_LNE.SHP_LEG_DRP_APP_TIM
+                                ELSE DATEADD(Hours, 6,TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_TIM)
+                            END)
+                    THEN 1
+                    ELSE 0
+                END
+        END) OTD_APP_FOR_CAR_SHP_6HR,
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.SHP_LEG_PIC_TRL_LOA_TYP_COD = 2
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+                    OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_DAT = 10000101)
+                    OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                        AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+                    THEN 0
+                    ELSE
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_TIM <= (
+                                    CASE
+                                        WHEN TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101
+                                        THEN TMS_LOA_LNE.SHP_LEG_PIC_APP_TIM
+                                        ELSE TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_TIM
+                                    END)
+                            THEN 1
+                            ELSE 0
+                        END
+                END
+        END) ATD_APP_PIK_FOR_CAR_SHP_0HR,
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.SHP_LEG_PIC_TRL_LOA_TYP_COD = 2
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+                    OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_DAT = 10000101)
+                    OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                        AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+                    THEN 0
+                    ELSE 1
+                END
+        END) AS OT_APP_FOR_CAR_SHP_2HR_DEN,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_TIM <=
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101
+                            THEN TMS_LOA_LNE.SHP_LEG_PIC_APP_TIM
+                            ELSE DATEADD(Hours, 2,TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_TIM)
+                        END
+                    THEN 1
+                    ELSE 0
+                END
+        END) AS OT_APP_PIK_FOR_CAR_SHP_2HR,
+    SUM((
+            CASE
+                WHEN (((TMS_LOA_LNE.SHP_CNY_DSC = 'DANNON COMPANY'
+                            OR  TMS_LOA_LNE.SHP_CNY_DSC = 'STONYFIELD FARM, INC.')
+                        OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS')
+                    OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE NA''')
+                THEN TMS_LOA_LNE.SHP_LEG_DRP_ORD_GRS_WGH_LBS_CSL_VAL
+                ELSE TMS_LOA_LNE.SHP_LEG_DRP_ORD_GRS_WGH_KGR_CSL_VAL
+            END)) AS PLN_SHP_GRS_VOL,
+    SUM((
+            CASE
+                WHEN (TMS_LOA_LNE.SHP_CNY_DSC = 'DANNON COMPANY'
+                    OR  TMS_LOA_LNE.SHP_CNY_DSC = 'STONYFIELD FARM, INC.'
+                    OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS'
+                    OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE NA')
+                THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_KGR_CSL_VAL
+                ELSE TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_KGR_CSL_VAL
+            END)) AS ORD_GRS_VOL,
+    SUM(TMS_LOA_LNE.SHP_LEG_DRP_ORD_GRS_WGH_KGR_CSL_VAL) PLN_SHP_GRS_KLS,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CUST PICKUP')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE 1
+        END) AS OTD_APP_PIK_FOR_CPU_2HR_DEN,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CUST PICKUP')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_TIM <=
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101
+                            THEN TMS_LOA_LNE.SHP_LEG_PIC_APP_TIM
+                            ELSE DATEADD(Hours, 2, TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_TIM)
+                        END
+                    THEN 1
+                    ELSE 0
+                END
+        END) AS OT_APP_PIK_FOR_CPU_2HR,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CUST PICKUP')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_TIM <=
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101
+                            THEN TMS_LOA_LNE.SHP_LEG_PIC_APP_TIM
+                            ELSE TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_TIM
+                        END
+                    THEN 1
+                    ELSE 0
+                END
+        END) AS OT_APP_PIK_FOR_CPU_0HR,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CUST PICKUP')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_TIM <=
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101
+                            THEN TMS_LOA_LNE.SHP_LEG_PIC_APP_TIM
+                            ELSE DATEADD(Hours, 6, TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_TIM)
+                        END
+                    THEN 1
+                    ELSE 0
+                END
+        END) AS OT_APP_PIK_FOR_CPU_6HR,
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_TIM <=
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101
+                            THEN TMS_LOA_LNE.SHP_LEG_PIC_APP_TIM
+                            ELSE DATEADD(MIN, 30, TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_TIM)
+                        END
+                    THEN 1
+                    ELSE 0
+                END
+        END) AS OT_APP_PIK_FOR_CAR_SHP_05HR,
+    MAX(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_TIM <= DATEADD(MIN, 30,
+                        TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_TIM)
+                    AND TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'ORD'
+                    THEN TMS_LOA_LNE.SHP_ORD_DOC_NUM
+                    ELSE
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_TIM <= DATEADD( MIN, 30,
+                                TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_TIM)
+                            AND TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'DEL'
+                            THEN TMS_LOA_LNE.SHP_DEL_DOC_NUM
+                            ELSE
+                                CASE
+                                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_TIM <= DATEADD( MIN, 30,
+                                        TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_TIM)
+                                    AND TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'SHP'
+                                    THEN TMS_LOA_LNE.LOA_CBU_REF_NUM
+                                    ELSE NULL
+                                END
+                        END
+                END
+        END) AS OTD_APP_FOR_CAR_SHP_05HR,
+    -- create the OT_APP_CAR_SHP_6HR column:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_TIM <=
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101
+                            THEN TMS_LOA_LNE.SHP_LEG_PIC_APP_TIM
+                            ELSE DATEADD( Hours, 6, TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_TIM)
+                        END
+                    THEN 1
+                    ELSE 0
+                END
+        END) AS OT_APP_PIK_CAR_SHP_6HR,
+    -- create OTD_APP_CAR_SHP_6HR column:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_TIM <=
+                        CASE
+                            WHEN TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101
+                            THEN TMS_LOA_LNE.SHP_LEG_DRP_APP_TIM
+                            ELSE DATEADD(Hours, 6,TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_TIM)
+                        END
+                    THEN 1
+                    ELSE 0
+                END
+        END) AS OTD_APP_CAR_SHP_6HR,
+    -- create LAN_MLS columns:
+    SUM((TMS_LOA_LNE.SHP_LEG_STP_RTE_LGT_NBR * TMS_LOA_LNE.SHP_LEG_STP_WGH_RAT)) AS LAN_MLS,
+    -- create SCR_ERL_CAR_SHP_CAR column:
+    SUM(
+        -- case when:
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            -- else:
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT <= TMS_LOA_LNE.SHP_LEG_DRP_INI_RQT_DEL_DAT
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY
+                    ELSE 0
+                END
+        END) AS SCR_ERL_CAR_SHP_CAR,
+    -- create the SCR_XCT_CAR_SHP_CAR column:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = TMS_LOA_LNE.SHP_LEG_DRP_INI_RQT_DEL_DAT
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY
+                    ELSE 0
+                END
+        END) AS SCR_XCT_CAR_SHP_CAR,
+    -- create the SHP_LEG_DRP_DEL_CAR_CSL_QTY column:
+    SUM(TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY) AS SHP_LEG_DRP_DEL_CAR_CSL_QTY ,
+    -- create the SCR_ERL_CPU_CAR column:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CUST PICKUP')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT <=
+                        TMS_LOA_LNE.SHP_LEG_DRP_INI_RQT_DEL_DAT
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY
+                    ELSE 0
+                END
+        END) AS SCR_ERL_CPU_CAR,
+    -- create the SCR_XCT_CPU_CAR column:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CUST PICKUP')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT =
+                        TMS_LOA_LNE.SHP_LEG_DRP_INI_RQT_DEL_DAT
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY
+                    ELSE 0
+                END
+        END) AS SCR_XCT_CPU_CAR,
+    -- create the OT_ORI_RQT_PIK_FOR_CPU:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CUST PICKUP')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT = 10000101)
+            THEN 0
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_PIC_ARV_GTE_DAT <=
+                        TMS_LOA_LNE.SHP_LEG_DRP_INI_RQT_DEL_DAT
+                    THEN 1
+                    ELSE 0
+                END
+        END) AS OT_ORI_RQT_PIK_FOR_CPU,
+    -- create the OT_ORI_RQT_DEL_FOR_CAR_SHP column:
+    MAX(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT <= TMS_LOA_LNE.SHP_LEG_DRP_INI_RQT_DEL_DAT
+                    AND TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'ORD'
+                    THEN TMS_LOA_LNE.SHP_ORD_DOC_NUM
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT <= TMS_LOA_LNE.SHP_LEG_DRP_INI_RQT_DEL_DAT
+                    AND TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'DEL'
+                    THEN TMS_LOA_LNE.SHP_DEL_DOC_NUM
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT <= TMS_LOA_LNE.SHP_LEG_DRP_INI_RQT_DEL_DAT
+                    AND TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'SHP'
+                    THEN TMS_LOA_LNE.LOA_CBU_REF_NUM
+                    ELSE NULL
+                END
+        END) AS OT_ORI_RQT_DEL_FOR_CAR_SHP,
+    -- create the TOT_ORD_PIK column:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+            THEN 0
+            ELSE 1
+        END) AS TOT_ORD_PIK,
+
+    
+    
 -- create bracket column:
 CASE
     -- first condition:
