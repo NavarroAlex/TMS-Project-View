@@ -962,47 +962,226 @@ SELECT
                 THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY
                 ELSE TMS_LOA_LNE.SHP_CAR_NBR
             END)) AS WJXBFS5,
+    -- create the ORD_CNT_OTD_FLG column:
+    MAX((
+            CASE
+                WHEN
+                    CASE
+                        WHEN TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_BGN_TIM ='1000-01-01 00:00:00'
+                        OR  TMS_LOA_LNE.SHP_LEG_DRP_ARV_TIM ='1000-01-01 00:00:00'
+                        THEN 0
+                        ELSE 1
+                    END IN (1)
+                THEN
+                    CASE
+                        WHEN TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'ORD'
+                        THEN TMS_LOA_LNE.SHP_ORD_DOC_NUM
+                        WHEN TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'DEL'
+                        THEN TMS_LOA_LNE.SHP_DEL_DOC_NUM
+                        WHEN TMS_LOA_LNE.SHP_CBU_REF_DOC_TYP = 'SHP'
+                        THEN TMS_LOA_LNE.LOA_CBU_REF_NUM
+                        ELSE '#'
+                    END
+                ELSE NULL
+            END)) AS ORD_CNT_OTD_FLG,
+    -- create the ORD_CAR column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.SAL_ORG_COD IN ('1000',
+                                             '1400')
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_INI_ORD_CAR_CSL_QTY
+            ELSE TMS_LOA_LNE.SHP_LEG_DRP_ORD_CAR_CSL_QTY
+        END) AS ORD_CAR,
+    -- create the ORD_CAS_CUS_DEL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_CUS_PIC_FLG = 'CARRIER SHIPMENT'
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_ORD_CAR_CSL_QTY
+            ELSE 0
+        END) AS ORD_CAS_CUS_DEL,
+    -- create the ORD_CAS_CUS_PIC column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_CUS_PIC_FLG = 'CUST PICKUP'
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_ORD_CAR_CSL_QTY
+            ELSE 0
+        END) AS ORD_CAS_CUS_PIC,
+    -- create the SHP_CAR column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY > 0
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY
+            ELSE TMS_LOA_LNE.SHP_CAR_NBR
+        END) AS SHP_CAR,
+    -- create the SHP_NET_LBS_CUS_DEL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_CUS_PIC_FLG = 'CARRIER SHIPMENT'
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_LBS_CSL_VAL
+            ELSE 0
+        END) AS SHP_NET_LBS_CUS_DEL,
+    -- create the SHP_NET_LBS_IM column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'IM'
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_LBS_CSL_VAL
+            ELSE 0
+        END) AS SHP_NET_LBS_IM,
+    -- create the SHP_NET_LBS_LTL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'LTL'
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_LBS_CSL_VAL
+            ELSE 0
+        END) AS SHP_NET_LBS_LTL,
+    -- create the SHP_NET_LBS_TL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'TL'
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_LBS_CSL_VAL
+            ELSE 0
+        END) AS SHP_NET_LBS_TL,
+    -- create the SHP_GRS_VOL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.SHP_CNY_DSC = 'DANNON COMPANY'
+            OR  TMS_LOA_LNE.SHP_CNY_DSC = 'STONYFIELD FARM, INC.'
+            OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS'
+            OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE NA'
+            AND (TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_LBS_CSL_VAL > 0)
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_LBS_CSL_VAL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE CANADA'
+                    OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE WATERS OF AMERICA'
+                    OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS'
+                    AND ( TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_KGR_CSL_VAL > 0)
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_KGR_CSL_VAL
+                    ELSE 0
+                END
+        END) AS SHP_GRS_VOL,
+    -- create the SHP_GRS_VOL_CUS_DEL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_CUS_PIC_FLG = 'CARRIER SHIPMENT'
+            AND (TMS_LOA_LNE.SHP_CNY_DSC = 'DANNON COMPANY'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'STONYFIELD FARM, INC.'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE NA')
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_LBS_CSL_VAL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.LOA_CUS_PIC_FLG = 'CARRIER SHIPMENT'
+                    AND ( TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE CANADA'
+                        OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE WATERS OF AMERICA')
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_KGR_CSL_VAL
+                    ELSE 0
+                END
+        END) AS SHP_GRS_VOL_CUS_DEL,
+    -- create the SHP_GRS_VOL_IM column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'IM'
+            AND (TMS_LOA_LNE.SHP_CNY_DSC = 'DANNON COMPANY'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'STONYFIELD FARM, INC.'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE NA')
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_LBS_CSL_VAL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'IM'
+                    AND ( TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE CANADA'
+                        OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE WATERS OF AMERICA')
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_KGR_CSL_VAL
+                    ELSE 0
+                END
+        END) AS SHP_GRS_VOL_IM,
+    -- create the SHP_GRS_VOL_LTL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'LTL'
+            AND (TMS_LOA_LNE.SHP_CNY_DSC = 'DANNON COMPANY'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'STONYFIELD FARM, INC.'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE NA')
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_LBS_CSL_VAL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'LTL'
+                    AND ( TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE CANADA'
+                        OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE WATERS OF AMERICA')
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_KGR_CSL_VAL
+                    ELSE 0
+                END
+        END) AS SHP_GRS_VOL_LTL,
+    -- create the SHP_GRS_VOL_TL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'TL'
+            AND (TMS_LOA_LNE.SHP_CNY_DSC = 'DANNON COMPANY'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'STONYFIELD FARM, INC.'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS'
+                OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE NA')
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_LBS_CSL_VAL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.LOA_TRP_MDE_DSC = 'TL'
+                    AND ( TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE CANADA'
+                        OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE WATERS OF AMERICA')
+                    THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_KGR_CSL_VAL
+                    ELSE 0
+                END
+        END) AS SHP_GRS_VOL_TL,
+    -- create the SHP_NET_VOL column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.SHP_CNY_DSC = 'DANNON COMPANY'
+            OR  TMS_LOA_LNE.SHP_CNY_DSC = 'STONYFIELD FARM, INC.'
+            OR  TMS_LOA_LNE.SHP_CNY_DSC = 'WHITEWAVE FOODS'
+            OR  TMS_LOA_LNE.SHP_CNY_DSC = 'DANONE NA'
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_LBS_CSL_VAL
+            ELSE TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_KGR_CSL_VAL
+        END) AS SHP_NET_VOL,
     
-    
--- create bracket column:
-CASE
-    -- first condition:
-    WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS < 3000 THEN '3000'
-    -- second condition:
-    WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS >= 3000 AND TMS_LOA_LNE.GRS_WGH_CAR_LBS <= 7000 THEN '3000-7000'
-    -- third condition:
-    WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS >= 7000 AND TMS_LOA_LNE.GRS_WGH_CAR_LBS <= 20000 THEN '7000-20000'
-    -- fourth condition:
-    WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS >= 20000 AND TMS_LOA_LNE.GRS_WGH_CAR_LBS <= 30000 THEN '20000-30000'
-    -- fifth condition:
-    WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS >= 30000 AND TMS_LOA_LNE.GRS_WGH_CAR_LBS <= 39000 THEN '30000-39000'
-    -- sixth condition:
-    WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS > 39000 THEN 'Greater Than 39000'
-    -- end:
-    END AS "GRS_WGH_CAR_Bracket",
--- create id_lane column:
-CONCAT("SHP_LEG_PIC_CBU_COD","SHP_LEG_DRP_CBU_COD") AS ID_Lane,
--- create state > state lane column:
-CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_STE_COD") AS "state > state lane",
--- create "Origin > City, ST Lane" column:
-CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_CTY_DSC", ' , ', "SHP_LEG_DRP_STE_COD") AS "Origin > City, ST Lane",
--- create "Lane" column:
-CONCAT("SHP_LEG_PIC_CTY_DSC", ', ' ,"SHP_LEG_PIC_STE_COD", ' - ', "SHP_LEG_DRP_CTY_DSC", ', ', "SHP_LEG_DRP_STE_COD") AS "Lane",
--- create "Mode" column:
-CASE
-    WHEN TMS_LOA_LNE.LOA_PIC_DRP_STP_FLG = 'MULTI DROP' THEN 'MSTL' ELSE LOA_TRP_MDE_DSC END AS "Mode",
--- create Origin-Destination Lane column:
-CONCAT("SHP_LEG_PIC_NAM_COD", ' - ', "SHP_LEG_DRP_NAM_COD") AS "Origin-Destination Lane",
--- create Origin City/State Column:
-CONCAT("SHP_LEG_PIC_CTY_DSC", ', ', "SHP_LEG_PIC_STE_COD") AS "Origin City/State",
--- create In-Gate Year Column:
-YEAR("SHP_LEG_DRP_ARV_GTE_TIM") AS "In-Gate Year",
--- create In-Gate Data Available? column:
-CASE
-    WHEN "In-Gate Year"= 1000 THEN 'No' ELSE 'Yes' END AS "In-Gate Data Available?",
--- create Destination City/State column:
-CONCAT("SHP_LEG_DRP_CTY_DSC",', ', "SHP_LEG_DRP_STE_COD") AS "Destination City/State",
--- create Origin Name - City/State - Destination Name - City/State column:
-CONCAT("SHP_LEG_PIC_NAM_COD", ' - ', "Origin City/State", '_', "SHP_LEG_DRP_NAM_COD",'_',"Destination City/State") AS "Origin Name - City/State - Destination Name - City/State"
+        -- create bracket column:
+        CASE
+            -- first condition:
+            WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS < 3000 THEN '3000'
+            -- second condition:
+            WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS >= 3000 AND TMS_LOA_LNE.GRS_WGH_CAR_LBS <= 7000 THEN '3000-7000'
+            -- third condition:
+            WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS >= 7000 AND TMS_LOA_LNE.GRS_WGH_CAR_LBS <= 20000 THEN '7000-20000'
+            -- fourth condition:
+            WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS >= 20000 AND TMS_LOA_LNE.GRS_WGH_CAR_LBS <= 30000 THEN '20000-30000'
+            -- fifth condition:
+            WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS >= 30000 AND TMS_LOA_LNE.GRS_WGH_CAR_LBS <= 39000 THEN '30000-39000'
+            -- sixth condition:
+            WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS > 39000 THEN 'Greater Than 39000'
+            -- end:
+            END AS "GRS_WGH_CAR_Bracket",
+        -- create id_lane column:
+        CONCAT("SHP_LEG_PIC_CBU_COD","SHP_LEG_DRP_CBU_COD") AS ID_Lane,
+        -- create state > state lane column:
+        CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_STE_COD") AS "state > state lane",
+        -- create "Origin > City, ST Lane" column:
+        CONCAT("SHP_LEG_PIC_STE_COD", ' > ' , "SHP_LEG_DRP_CTY_DSC", ' , ', "SHP_LEG_DRP_STE_COD") AS "Origin > City, ST Lane",
+        -- create "Lane" column:
+        CONCAT("SHP_LEG_PIC_CTY_DSC", ', ' ,"SHP_LEG_PIC_STE_COD", ' - ', "SHP_LEG_DRP_CTY_DSC", ', ', "SHP_LEG_DRP_STE_COD") AS "Lane",
+        -- create "Mode" column:
+        CASE
+            WHEN TMS_LOA_LNE.LOA_PIC_DRP_STP_FLG = 'MULTI DROP' THEN 'MSTL' ELSE LOA_TRP_MDE_DSC END AS "Mode",
+        -- create Origin-Destination Lane column:
+        CONCAT("SHP_LEG_PIC_NAM_COD", ' - ', "SHP_LEG_DRP_NAM_COD") AS "Origin-Destination Lane",
+        -- create Origin City/State Column:
+        CONCAT("SHP_LEG_PIC_CTY_DSC", ', ', "SHP_LEG_PIC_STE_COD") AS "Origin City/State",
+        -- create In-Gate Year Column:
+        YEAR("SHP_LEG_DRP_ARV_GTE_TIM") AS "In-Gate Year",
+        -- create In-Gate Data Available? column:
+        CASE
+            WHEN "In-Gate Year"= 1000 THEN 'No' ELSE 'Yes' END AS "In-Gate Data Available?",
+        -- create Destination City/State column:
+        CONCAT("SHP_LEG_DRP_CTY_DSC",', ', "SHP_LEG_DRP_STE_COD") AS "Destination City/State",
+        -- create Origin Name - City/State - Destination Name - City/State column:
+        CONCAT("SHP_LEG_PIC_NAM_COD", ' - ', "Origin City/State", '_', "SHP_LEG_DRP_NAM_COD",'_',"Destination City/State") AS "Origin Name - City/State - Destination Name - City/State"
 
 
