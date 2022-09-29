@@ -918,7 +918,50 @@ SELECT
                     ELSE NULL
                 END
         END) AS ON_TIM_DEL_TO_RDD,
-
+    -- create the WJXBFS1 column:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG = 'CUST PICKUP')
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_ORD_CAR_CSL_QTY
+            ELSE 0
+        END) AS WJXBFS1,
+    -- create the WJXBFS2 column:
+    SUM(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG = 'CARRIER SHIPMENT')
+            THEN TMS_LOA_LNE.SHP_LEG_DRP_ORD_CAR_CSL_QTY
+            ELSE 0
+        END) AS WJXBFS2,
+    -- create the WJXBFS3 column:
+    SUM((
+            CASE
+                WHEN TMS_LOA_LNE.SAL_ORG_COD IN ('1000',
+                                                 '1400')
+                THEN TMS_LOA_LNE.SHP_LEG_DRP_INI_ORD_CAR_CSL_QTY
+                ELSE TMS_LOA_LNE.SHP_LEG_DRP_ORD_CAR_CSL_QTY
+            END)) AS WJXBFS3,
+    -- create the WJXBFS4 column:
+    SUM(
+        CASE
+            WHEN TMS_LOA_LNE.SHP_LEG_PIC_TRL_LOA_TYP_COD = 2
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+                    OR  (TMS_LOA_LNE.SHP_LEG_PIC_ARV_DAT = 10000101)
+                    OR  (TMS_LOA_LNE.SHP_LEG_PIC_APP_DAT = 10000101
+                        AND TMS_LOA_LNE.SHP_LEG_PIC_APP_WIN_END_DAT = 10000101)
+                    THEN 0
+                    ELSE 1
+                END
+        END) AS WJXBFS4,
+    -- create the WJXBFS5 column:
+    SUM((
+            CASE
+                WHEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY > 0
+                THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_CAR_CSL_QTY
+                ELSE TMS_LOA_LNE.SHP_CAR_NBR
+            END)) AS WJXBFS5,
     
     
 -- create bracket column:
