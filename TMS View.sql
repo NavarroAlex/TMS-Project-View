@@ -871,6 +871,53 @@ SELECT
             THEN 0
             ELSE 1
         END) AS TOT_ORD_PIK,
+    -- create the OT_RQT_DEL_FOR_CAR_SHP column:
+    MAX(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT <= TMS_LOA_LNE.SHP_LEG_DRP_RQT_DEL_DAT
+                    THEN TMS_LOA_LNE.SHP_ORD_DOC_NUM
+                    ELSE NULL
+                END
+        END) AS OT_RQT_DEL_FOR_CAR_SHP,
+    -- create the GRS_WGH_CAR_LBS column:
+    SUM(TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_WTH_CAR_LBS_CSL_VAL) AS GRS_WGH_CAR_LBS,
+    -- create the ON_TIM_DEL_TO_RQS_DAY column:
+    MAX(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT <= TMS_LOA_LNE.SHP_LEG_DRP_WIN_BGN_DAT
+                    THEN TMS_LOA_LNE.SHP_ORD_DOC_NUM
+                    ELSE NULL
+                END
+        END) AS ON_TIM_DEL_TO_RQS_DAY,
+    -- create ON_TIM_DEL_TO_RDD column:
+    MAX(
+        CASE
+            WHEN (TMS_LOA_LNE.LOA_CUS_PIC_FLG <> 'CARRIER SHIPMENT')
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT = 10000101)
+            OR  (TMS_LOA_LNE.SHP_LEG_DRP_APP_DAT = 10000101
+                AND TMS_LOA_LNE.SHP_LEG_DRP_APP_WIN_END_DAT = 10000101)
+            THEN NULL
+            ELSE
+                CASE
+                    WHEN TMS_LOA_LNE.SHP_LEG_DRP_ARV_DAT <= TMS_LOA_LNE.SHP_LEG_DRP_WIN_BGN_DAT
+                    THEN TMS_LOA_LNE.SHP_ORD_DOC_NUM
+                    ELSE NULL
+                END
+        END) AS ON_TIM_DEL_TO_RDD,
 
     
     
