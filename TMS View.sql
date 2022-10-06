@@ -1174,8 +1174,9 @@ SELECT
             THEN TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_LBS_CSL_VAL
             ELSE TMS_LOA_LNE.SHP_LEG_DRP_DEL_NET_WGH_KGR_CSL_VAL
         END) AS SHP_NET_VOL,
-    
-        -- create bracket column:
+-- select columns:
+SELECT
+-- create bracket column:
         CASE
             -- first condition:
             WHEN TMS_LOA_LNE.GRS_WGH_CAR_LBS < 3000 THEN '3000'
@@ -1214,4 +1215,28 @@ SELECT
         -- create Destination City/State column:
         CONCAT("SHP_LEG_DRP_CTY_DSC",', ', "SHP_LEG_DRP_STE_COD") AS "Destination City/State",
         -- create Origin Name - City/State - Destination Name - City/State column:
-        CONCAT("SHP_LEG_PIC_NAM_COD", ' - ', "Origin City/State", '_', "SHP_LEG_DRP_NAM_COD",'_',"Destination City/State") AS "Origin Name - City/State - Destination Name - City/State"
+        CONCAT("SHP_LEG_PIC_NAM_COD", ' - ', "Origin City/State", '_', "SHP_LEG_DRP_NAM_COD",'_',"Destination City/State") AS "Origin Name - City/State - Destination Name - City/State",
+        -- create the shuttle(y/n) column:
+        CASE WHEN TMS_LOA_LNE.LOA_GRP_DSC = 'SHUTTLE' THEN 'Shuttle' ELSE 'Non-Shuttle' END AS "Shuttle (Y/N)",
+        -- create the Shuttle Cost column:
+        CASE WHEN "Shuttle (Y/N)" = 'Shuttle' THEN TMS_LOA_LNE.SHP_LEG_PIC_NAM_COD ELSE '0' END AS "Shuttle Origin",
+        -- create Shuttle Cost column: first condition:
+        CASE WHEN "Shuttle Origin" = 'MINSTER' THEN 64
+        -- second condition:
+        WHEN "Shuttle Origin" = '0030 US YC PL Portland' OR "Shuttle Origin" = 'AMC SALEM' THEN 429
+        -- third condition:
+        WHEN "Shuttle Origin" = 'FORT WORTH MFG' THEN 217
+        -- fourth condition:
+        WHEN "Shuttle Origin" = 'WEST JORDAN MFG' THEN 106
+        -- else:
+        ELSE 0 END AS "Shuttle Cost",
+        -- create Linehaul with Shuttle column:
+        TMS_LOA_LNE."BAS_LHL_DOL"+"Shuttle Cost" AS "Linehaul with Shuttle"
+
+-- from clause:
+FROM DEV_NAM.NAM_DWH.V_PBI_D_TMS TMS_LOA_LNE
+LIMIT 10;
+
+
+SELECT DISTINCT "DTL_DTN_AT_ORI_DOL"
+FROM DEV_NAM.NAM_DWH.V_PBI_D_TMS
