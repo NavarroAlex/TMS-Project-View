@@ -71,8 +71,19 @@ SELECT
         -- create the Unique Lane ID column:
         CONCAT("Origin Name/Campus",'-',t2.DST_ID) AS "Unique Lane ID",
         -- create the Origin Campus - Destination Campus City/State Lane column:
-        CONCAT("Origin Name/Campus", ', ',"Destination Name/Campus",', ', "Destination City/State") AS "Origin Campus - Destination Campus/City Lane"
-
+        CONCAT("Origin Name/Campus", ', ',"Destination Name/Campus",', ', "Destination City/State") AS "Origin Campus - Destination Campus/City Lane",
+        -- create the Origin Campus - City/State Lane column:
+        CONCAT("Origin Name/Campus", '- ', "Destination City/State") AS "Origin Campus - City/State Lane",
+        -- create the "Origin Campus - Destination State Lane" column:
+        CONCAT("Origin Name/Campus",'_',t2.DST_STE_ID) AS "Origin Campus - Destination State Lane",
+        -- create the "Saddle Creek" column:
+        CASE WHEN t3.ORN_DES = '0030 US DC Saddle Creek 3PL' THEN 'Yes'
+        -- second condition:
+        WHEN t3.ORN_DES = 'SADDLE CREEK LOGISTICS' THEN 'Yes'
+        -- else:
+        ELSE 'No' END AS "Saddle Creek",
+        -- create the RFQ Origin Region column:
+        CASE WHEN t2.RFQ_OGN_RGN IS NOT NULL THEN t2.RFQ_OGN_RGN ELSE "Origin City/State" END AS "RFG Origin Region"
 -- from clause:
 FROM DEV_NAM.NAM_DWH.V_PBI_D_TMS t1
 -- inner join Destination Campus table: MDS
