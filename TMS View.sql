@@ -87,7 +87,21 @@ SELECT
         -- create the RFQ Origin Region column:
         CASE WHEN t3.RFQ_OGN_RGN IS NOT NULL THEN t3.RFQ_OGN_RGN ELSE "Origin City/State" END AS "RFG Origin Region",
         -- create the RFQ Destination Region column:
-        CASE WHEN t2.RFQ_OGN_RGN IS NOT NULL THEN t2.RFQ_OGN_RGN ELSE "Destination City/State" END AS "RFG Destination Region"
+        CASE WHEN t2.RFQ_OGN_RGN IS NOT NULL THEN t2.RFQ_OGN_RGN ELSE "Destination City/State" END AS "RFG Destination Region",
+        -- create Transit Time Date
+        ABS(DATEDIFF(day, t1.SHP_LEG_DRP_ARV_TIM,TO_DATE(CONCAT(LEFT(t1.SHP_LEG_ACT_MVT_DAT,4),'-', SUBSTRING(t1.SHP_LEG_ACT_MVT_DAT,5,2),'-',RIGHT(t1.SHP_LEG_ACT_MVT_DAT,2))))) AS "Transit Time",
+        -- create Lead Time column:
+        ABS(DATEDIFF(day, TO_DATE(CONCAT(LEFT(t1.SHP_LEG_ACT_MVT_DAT,4),'-', SUBSTRING(t1.SHP_LEG_ACT_MVT_DAT,5,2),'-',RIGHT(t1.SHP_LEG_ACT_MVT_DAT,2))),t1."LOA_CRE_TIM")) AS "Lead Time",
+        -- create Lead Time Category column: first condition:
+        CASE WHEN "Lead Time" <= 1 THEN '<24 Hrs'
+        -- create Lead Time Category column: second condition:
+        WHEN "Lead Time" <3 THEN '<72 Hrs'
+        -- create Lead Time Category column: third condition:
+        WHEN "Lead Time" >=3 THEN '>72 Hrs'
+        -- else:
+        ELSE NULL END AS "Lead Time Category"
+  
+
 -- from clause:
 FROM DEV_NAM.NAM_DWH.V_PBI_D_TMS t1
 -- inner join Destination Campus table: MDS
@@ -134,7 +148,10 @@ CTE_2_TMS AS (
                       "Origin Campus - Destination State Lane",
                       "Saddle Creek",
                       "RFG Origin Region",
-                      "RFG Destination Region"
+                      "RFG Destination Region",
+                      "Transit Time",
+                      "Lead Time",
+                      "Lead Time Category"
                        ORDER BY 
                       "GRS_WGH_CAR_Bracket",
                       "ID_LANE",
@@ -164,7 +181,10 @@ CTE_2_TMS AS (
                       "Origin Campus - Destination State Lane",
                       "Saddle Creek",
                       "RFG Origin Region",
-                      "RFG Destination Region" DESC) AS row_num 
+                      "RFG Destination Region",
+                      "Transit Time",
+                      "Lead Time",
+                      "Lead Time Category" DESC) AS row_num 
     -- from:
     FROM CTE_TMS
   )
