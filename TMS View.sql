@@ -1,4 +1,6 @@
--- select columns:
+-- create CTE:
+WITH CTE_TMS AS (
+    -- select columns:
 SELECT
 -- create bracket column:
         CASE
@@ -83,14 +85,89 @@ SELECT
         -- else:
         ELSE 'No' END AS "Saddle Creek",
         -- create the RFQ Origin Region column:
-        CASE WHEN t2.RFQ_OGN_RGN IS NOT NULL THEN t2.RFQ_OGN_RGN ELSE "Origin City/State" END AS "RFG Origin Region"
+        CASE WHEN t3.RFQ_OGN_RGN IS NOT NULL THEN t3.RFQ_OGN_RGN ELSE "Origin City/State" END AS "RFG Origin Region",
+        -- create the RFQ Destination Region column:
+        CASE WHEN t2.RFQ_OGN_RGN IS NOT NULL THEN t2.RFQ_OGN_RGN ELSE "Destination City/State" END AS "RFG Destination Region"
 -- from clause:
 FROM DEV_NAM.NAM_DWH.V_PBI_D_TMS t1
 -- inner join Destination Campus table: MDS
-INNER JOIN DEV_NAM.NAM_STG_MDS.R_DST_CPS_TMS t2
+INNER JOIN QAT_NAM.NAM_STG_MDS.R_DST_CPS_TMS t2
 -- ON:
 ON t1."SHP_LEG_DRP_CBU_COD" = t2."DST_ID"
 -- inner join Origin Campus table: MDS:
 INNER JOIN QAT_NAM.NAM_STG_MDS.R_ORN_CPS_TMS t3
 -- ON:
 ON t1."SHP_LEG_PIC_CBU_COD" = t3."ORN_ID"
+),
+
+-- create cte_2: check for duplicates:
+CTE_2_TMS AS (
+    -- select columns:
+    SELECT *,
+    -- execute ROW_NUMBER():
+    ROW_NUMBER() OVER(PARTITION BY
+                      "GRS_WGH_CAR_Bracket",
+                      "ID_LANE",
+                      "state > state lane",
+                      "Origin > City, ST Lane",
+                      "Lane",
+                      "Mode",
+                      "Origin-Destination Lane",
+                      "Origin City/State",
+                      "In-Gate Year",
+                      "In-Gate Data Available?",
+                      "Destination City/State",
+                      "Origin Name - City/State - Destination Name - City/State",
+                      "Shuttle (Y/N)",
+                      "Shuttle Origin",
+                      "Shuttle Cost",
+                      "Linehaul with Shuttle",
+                      "Total Transportation with Shuttle",
+                      "Destination Name/Campus",
+                      "Origin Name/Campus",
+                      "Campus Level Lane",
+                      "DC Flag",
+                      "Inbound/Outbound Flag",
+                      "Unique Lane ID",
+                      "Origin Campus - Destination Campus/City Lane",
+                      "Origin Campus - City/State Lane",
+                      "Origin Campus - Destination State Lane",
+                      "Saddle Creek",
+                      "RFG Origin Region",
+                      "RFG Destination Region"
+                       ORDER BY 
+                      "GRS_WGH_CAR_Bracket",
+                      "ID_LANE",
+                      "state > state lane",
+                      "Origin > City, ST Lane",
+                      "Lane",
+                      "Mode",
+                      "Origin-Destination Lane",
+                      "Origin City/State",
+                      "In-Gate Year",
+                      "In-Gate Data Available?",
+                      "Destination City/State",
+                      "Origin Name - City/State - Destination Name - City/State",
+                      "Shuttle (Y/N)",
+                      "Shuttle Origin",
+                      "Shuttle Cost",
+                      "Linehaul with Shuttle",
+                      "Total Transportation with Shuttle",
+                      "Destination Name/Campus",
+                      "Origin Name/Campus",
+                      "Campus Level Lane",
+                      "DC Flag",
+                      "Inbound/Outbound Flag",
+                      "Unique Lane ID",
+                      "Origin Campus - Destination Campus/City Lane",
+                      "Origin Campus - City/State Lane",
+                      "Origin Campus - Destination State Lane",
+                      "Saddle Creek",
+                      "RFG Origin Region",
+                      "RFG Destination Region" DESC) AS row_num 
+    -- from:
+    FROM CTE_TMS
+  )
+SELECT * FROM
+CTE_2_TMS
+WHERE row_num > 1;
