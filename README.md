@@ -2,8 +2,8 @@
 ![ScreenShot](https://www.danone.com/content/dam/danone-corp/danone-com/homepage/DANONE_LOGO.png)
 
 ## Authors:
-[alex.navarro@danone.com]
-[anthony.ferraris@external.danone.com]
+* [alex.navarro@danone.com]
+* [anthony.ferraris@external.danone.com]
 
 ## Project Overview:
 Add the following columns from the MDS tables in Snowflake to the existing TMS SQL View:
