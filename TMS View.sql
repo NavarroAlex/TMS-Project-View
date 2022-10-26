@@ -31,7 +31,7 @@ SELECT -- create the GROS_WGH_CAR_Bracket column:
         WHEN SUM(
             TMS_LOA_LNE.SHP_LEG_DRP_DEL_GRS_WGH_WTH_CAR_LBS_CSL_VAL
         ) > 39000 THEN 'Greater Than 39000' -- sixth condition:
-    END AS "GRS_WGH_CAR_BCKT",
+    END AS "GRS_WGH_CAR_BRT",
     -- create id_lane column:
     CONCAT(
         TMS_LOA_LNE.SHP_LEG_PIC_CBU_COD,
@@ -65,7 +65,7 @@ SELECT -- create the GROS_WGH_CAR_Bracket column:
     CASE
         WHEN TMS_LOA_LNE.LOA_PIC_DRP_STP_FLG = 'MULTI DROP' THEN 'MSTL'
         ELSE TMS_LOA_LNE.LOA_TRP_MDE_DSC
-    END AS "MOD",
+    END AS "MOD_FLG",
     -- create Origin-Destination Lane column:
     CONCAT(
         TMS_LOA_LNE.SHP_LEG_PIC_NAM_COD,
@@ -80,9 +80,9 @@ SELECT -- create the GROS_WGH_CAR_Bracket column:
     ) AS "ORI_CTY_ST",
     -- create In-Gate Data Available? column:
     CASE
-        WHEN YEAR(TMS_LOA_LNE.SHP_LEG_DRP_ARV_GTE_TIM) = 1000 THEN 'No'
+        WHE YEAR(TMS_LOA_LNE.SHP_LEG_DRP_ARV_GTE_TIM) = 1000 THEN 'No'
         ELSE 'Yes'
-    END AS "In-Gate Date Available?",
+    END AS "In_GT_DT_FLG",
     -- create Destination City/State column:
     CONCAT(
         TMS_LOA_LNE.SHP_LEG_DRP_CTY_DSC,
@@ -144,7 +144,7 @@ SELECT -- create the GROS_WGH_CAR_Bracket column:
     CASE
         WHEN "DC_FLG" = '0030' THEN 'INBOUND'
         ELSE TMS_LOA_LNE."SHP_LEG_INB_OTB_DSC"
-    END AS "Inbound/Outbound Flag",
+    END AS "IN_OUT_FLG",
     -- create the Unique Lane ID column:
     CONCAT("ORI_NAM_CPS", '-', TMS_LOA_LNE_DST_CPS.DST_ID) AS "Unique Lane ID",
     -- create the Origin Campus - Destination Campus City/State Lane column:
@@ -172,7 +172,7 @@ SELECT -- create the GROS_WGH_CAR_Bracket column:
         WHEN TMS_LOA_LNE_ORN_CPS.ORN_DES = '0030 US DC Saddle Creek 3PL' THEN 'Yes' -- second condition:
         WHEN TMS_LOA_LNE_ORN_CPS.ORN_DES = 'SADDLE CREEK LOGISTICS' THEN 'Yes' -- else:
         ELSE 'No'
-    END AS "Saddle Creek",
+    END AS "SD_CRK",
     -- create the RFQ Origin Region column:
     CASE
         WHEN TMS_LOA_LNE_ORN_CPS.RFQ_OGN_RGN IS NOT NULL THEN TMS_LOA_LNE_ORN_CPS.RFQ_OGN_RGN
